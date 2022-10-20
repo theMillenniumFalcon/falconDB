@@ -1,0 +1,1 @@
+A database created to increase my knowledge on databases
