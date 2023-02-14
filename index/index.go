@@ -1,6 +1,7 @@
 package index
 
 import (
+	"fmt"
 	"sync"
 
 	af "github.com/spf13/afero"
@@ -74,6 +75,15 @@ func (i *FileIndex) Put(file *File, bytes []byte) error {
 	defer i.mu.Unlock()
 
 	i.index[file.FileName] = file
-	err := file.replaceContent(string(bytes))
+	err := file.ReplaceContent(string(bytes))
 	return err
+}
+
+// ResolvePath returns a string representing the path to file
+func (f *File) ResolvePath() string {
+	if I.dir == "" {
+		return fmt.Sprintf("%s.json", f.FileName)
+	}
+
+	return fmt.Sprintf("%s/%s.json", I.dir, f.FileName)
 }

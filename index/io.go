@@ -8,7 +8,7 @@ import (
 	af "github.com/spf13/afero"
 )
 
-func crawlDirectory(directory string) []string {
+func CrawlDirectory(directory string) []string {
 	files, err := af.ReadDir(I.FileSystem, directory)
 	if err != nil {
 		log.Fatal(err)
@@ -27,8 +27,8 @@ func crawlDirectory(directory string) []string {
 	return res
 }
 
-// replaceContent changes the contents of file f to be str
-func (f *File) replaceContent(str string) error {
+// ReplaceContent changes the contents of file f to be str
+func (f *File) ReplaceContent(str string) error {
 	// write lock on file
 	f.mu.Lock()
 	defer f.mu.Unlock()
