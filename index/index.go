@@ -3,8 +3,10 @@ package index
 import (
 	"fmt"
 	"sync"
+	"time"
 
 	af "github.com/spf13/afero"
+	"github.com/theMillenniumFalcon/falconDB/log"
 )
 
 // I is the global database index which keeps track of
@@ -76,6 +78,7 @@ func (i *FileIndex) Put(file *File, bytes []byte) error {
 
 	i.index[file.FileName] = file
 	err := file.ReplaceContent(string(bytes))
+
 	return err
 }
 
@@ -86,6 +89,38 @@ func (f *File) ResolvePath() string {
 	}
 
 	return fmt.Sprintf("%s/%s.json", I.dir, f.FileName)
+}
+
+// Regenerate rebuilds the current file index from current directory
+// by crawling it for any .json files
+func (i *FileIndex) Regenerate() {
+	// write lock on index
+	i.mu.Lock()
+	defer i.mu.Unlock()
+
+	start := time.Now()
+	log.Info("building index for directory %s...", i.dir)
+
+	i.index = i.BuildIndexMap()
+	log.Success("built index of %d files in %d ms", len(i.index), time.Since(start).Milliseconds())
+}
+
+// RegenerateNew rebuilds the file index at a new given directory
+func (i *FileIndex) RegenerateNew(dir string) {
+	i.dir = dir
+	i.Regenerate()
+}
+
+// creates a map from key to File
+func (i *FileIndex) BuildIndexMap() map[string]*File {
+	newIndexMap := make(map[string]*File)
+
+	files := CrawlDirectory(i.dir)
+	for _, f := range files {
+		newIndexMap[f] = &File{FileName: f}
+	}
+
+	return newIndexMap
 }
 
 // Delete deletes the given file and then removes it from I
