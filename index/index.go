@@ -23,3 +23,12 @@ type File struct {
 	FileName string
 	mu       sync.RWMutex
 }
+
+// NewFileIndex returns a reference to a new file index
+func NewFileIndex(dir string) *FileIndex {
+	return &FileIndex{
+		dir:        dir,
+		index:      map[string]*File{},
+		FileSystem: af.NewOsFs(),
+	}
+}
