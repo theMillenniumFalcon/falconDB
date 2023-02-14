@@ -12,7 +12,6 @@ require (
 
 require (
 	github.com/fatih/color v1.14.1
-	github.com/julienschmidt/httprouter v1.3.0
 	github.com/spf13/afero v1.9.3
 	golang.org/x/sys v0.3.0 // indirect
 )
