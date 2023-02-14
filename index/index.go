@@ -37,3 +37,16 @@ func NewFileIndex(dir string) *FileIndex {
 func (i *FileIndex) SetFileSystem(fs af.Fs) {
 	i.FileSystem = fs
 }
+
+// List all keys in database
+func (i *FileIndex) List() (res []string) {
+	// read lock on index
+	i.mu.RLock()
+	defer i.mu.RUnlock()
+
+	for k := range i.index {
+		res = append(res, k)
+	}
+
+	return res
+}
