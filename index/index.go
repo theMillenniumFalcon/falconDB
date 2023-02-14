@@ -50,3 +50,19 @@ func (i *FileIndex) List() (res []string) {
 
 	return res
 }
+
+// Lookup returns the file with that key
+// Returns (File, true) if file exists
+// otherwise, returns new File, false
+func (i *FileIndex) Lookup(key string) (*File, bool) {
+	// read lock on index
+	i.mu.RLock()
+	defer i.mu.RUnlock()
+
+	// get if File exists, return nil and false otherwise
+	if file, ok := i.index[key]; ok {
+		return file, true
+	}
+
+	return &File{FileName: key}, false
+}
