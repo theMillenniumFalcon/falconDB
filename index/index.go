@@ -66,3 +66,14 @@ func (i *FileIndex) Lookup(key string) (*File, bool) {
 
 	return &File{FileName: key}, false
 }
+
+// Put creates/updates file in the fileindex
+func (i *FileIndex) Put(file *File, bytes []byte) error {
+	// write lock on index
+	i.mu.Lock()
+	defer i.mu.Unlock()
+
+	i.index[file.FileName] = file
+	err := file.replaceContent(string(bytes))
+	return err
+}
