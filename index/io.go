@@ -1,6 +1,7 @@
 package index
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
@@ -26,6 +27,27 @@ func CrawlDirectory(directory string) []string {
 	}
 
 	return res
+}
+
+func (f *File) ToMap() (res map[string]interface{}, err error) {
+	// get bytes
+	bytes, err := f.GetByteArray()
+	if err != nil {
+		return res, err
+	}
+
+	// unmarshal into map
+	err = json.Unmarshal(bytes, &res)
+	return res, err
+}
+
+// GetByteArray returns the byte array of given file
+func (f *File) GetByteArray() ([]byte, error) {
+	// read lock on file
+	f.mu.RLock()
+	defer f.mu.RUnlock()
+
+	return af.ReadFile(I.FileSystem, f.ResolvePath())
 }
 
 // ReplaceContent changes the contents of file f to be str
