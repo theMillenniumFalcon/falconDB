@@ -87,3 +87,18 @@ func (f *File) ResolvePath() string {
 
 	return fmt.Sprintf("%s/%s.json", I.dir, f.FileName)
 }
+
+// Delete deletes the given file and then removes it from I
+func (i *FileIndex) Delete(file *File) error {
+	// write lock on index
+	i.mu.Lock()
+	defer i.mu.Unlock()
+
+	// delete first so pointer isn't nil
+	err := file.Delete()
+	if err != nil {
+		delete(i.index, file.FileName)
+	}
+
+	return err
+}
