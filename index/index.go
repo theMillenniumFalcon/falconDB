@@ -32,3 +32,8 @@ func NewFileIndex(dir string) *FileIndex {
 		FileSystem: af.NewOsFs(),
 	}
 }
+
+// SetFileSystem sets the file system for the given FileIndex
+func (i *FileIndex) SetFileSystem(fs af.Fs) {
+	i.FileSystem = fs
+}
