@@ -1,6 +1,7 @@
 package index
 
 import (
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -32,6 +33,24 @@ func (f *File) ReplaceContent(str string) error {
 	// write lock on file
 	f.mu.Lock()
 	defer f.mu.Unlock()
+
+	// create a blank file
+	_, err := I.FileSystem.Create(f.ResolvePath())
+	if err != nil {
+		return err
+	}
+	file, err := I.FileSystem.OpenFile(f.ResolvePath(), os.O_WRONLY, os.ModeAppend)
+	if err != nil {
+		return err
+	}
+
+	defer file.Close()
+
+	// appends the given str to the now empty file
+	_, err = file.WriteString(str)
+	if err != nil {
+		return err
+	}
 
 	// success
 	return nil
