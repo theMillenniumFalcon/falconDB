@@ -51,11 +51,11 @@ func GetKey(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 		// successful field get
 		w.Header().Set("Content-Type", "application/json")
-		// maxDepth := getMaxDepthParam(r)
-		// resolvedJsonMap := index.ResolveReferences(jsonMap, maxDepth)
+		maxDepth := getMaxDepthParam(r)
+		resolvedJsonMap := index.ResolveReferences(jsonMap, maxDepth)
 
-		// jsonData, _ := json.Marshal(resolvedJsonMap)
-		// fmt.Fprintf(w, "%+v", string(jsonData))
+		jsonData, _ := json.Marshal(resolvedJsonMap)
+		fmt.Fprintf(w, "%+v", string(jsonData))
 		return
 	}
 
