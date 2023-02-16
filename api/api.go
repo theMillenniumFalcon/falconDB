@@ -76,3 +76,33 @@ func getMaxDepthParam(r *http.Request) int {
 
 	return maxDepth
 }
+
+// RegenerateIndex rebuilds main index with saved directory
+func RegenerateIndex(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	index.I.Regenerate()
+	log.WInfo(w, "regenerated index")
+}
+
+// DeleteKey deletes the file associated with the given key, returns 404 if not found
+func DeleteKey(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	key := ps.ByName("key")
+	log.Info("delete key '%s'", key)
+	file, ok := index.I.Lookup(key)
+
+	// if file found delete it
+	if ok {
+		err := index.I.Delete(file)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			log.WWarn(w, "err unable to delete key '%s': '%s'", key, err.Error())
+			return
+		}
+
+		log.WInfo(w, "delete '%s' successful", key)
+		return
+	}
+
+	// else state not found
+	w.WriteHeader(http.StatusNotFound)
+	log.WWarn(w, "key '%s' does not exist", key)
+}
