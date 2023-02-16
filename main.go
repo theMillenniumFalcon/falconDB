@@ -46,6 +46,7 @@ func serve(port int, dir string) error {
 	router.GET("/", api.GetIndex)
 	router.POST("/", api.RegenerateIndex)
 	router.GET("/:key", api.GetKey)
+	router.GET("/:key/:field", api.GetKeyField)
 	router.PUT("/:key", api.UpdateKey)
 	router.DELETE("/:key", api.DeleteKey)
 	router.PATCH("/:key/:field", api.PatchKeyField)
