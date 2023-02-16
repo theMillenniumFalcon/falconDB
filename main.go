@@ -5,9 +5,12 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/theMillenniumFalcon/falconDB/api"
+	"github.com/theMillenniumFalcon/falconDB/index"
 	"github.com/theMillenniumFalcon/falconDB/log"
 
 	"github.com/urfave/cli/v2"
@@ -37,7 +40,7 @@ func main() {
 // serve defines all the endpoints and starts a new http server on :3000
 func serve(port int, dir string) error {
 	log.SetLoggingLevel(log.INFO)
-	log.Info("initializing nanoDB")
+	log.Info("initializing falconDB")
 	setup(dir)
 
 	router := httprouter.New()
@@ -56,4 +59,60 @@ func serve(port int, dir string) error {
 	return http.ListenAndServe(fmt.Sprintf(":%d", port), router)
 }
 
-func setup(sir string) {}
+func setup(dir string) {
+	index.I = index.NewFileIndex(dir)
+
+	// create falconDB lock
+	err := makeLock(dir)
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+
+	index.I.Regenerate()
+
+	// trap sigint
+	c := make(chan os.Signal)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+		cleanUp(dir)
+		os.Exit(1)
+	}()
+}
+
+func cleanUp(dir string) {
+	log.Info("\n caught term signal! cleaning up...")
+
+	err := releaseLock(dir)
+	if err != nil {
+		log.Warn("couldn't remove lock")
+		log.Fatal(err)
+		return
+	}
+}
+
+func makeLock(dir string) error {
+	_, err := index.I.FileSystem.Stat(getLockLocation(dir))
+
+	if os.IsNotExist(err) {
+		_, err = index.I.FileSystem.Create(getLockLocation(dir))
+		return err
+	}
+
+	return fmt.Errorf("couldn't acquire lock on %s", dir)
+}
+
+func releaseLock(dir string) error {
+	lockdir := getLockLocation(dir)
+	return index.I.FileSystem.Remove(lockdir)
+}
+
+func getLockLocation(dir string) string {
+	base := "falconDB_lock"
+	if dir == "" || dir == "." {
+		return base
+	}
+
+	return dir + "/" + base
+}
