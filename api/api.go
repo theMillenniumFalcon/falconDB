@@ -65,6 +65,47 @@ func GetKey(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	log.WWarn(w, "key '%s' not found", key)
 }
 
+// GetKeyField returns key's field, 404 if not found
+func GetKeyField(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	key := ps.ByName("key")
+	field := ps.ByName("field")
+	log.Info("get field '%s' in key '%s'", field, key)
+
+	file, ok := index.I.Lookup(key)
+
+	// if file fetch is successful
+	if ok {
+		// unpack bytes into map
+		jsonMap, err := file.ToMap()
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			log.WWarn(w, "err key '%s' cannot be parsed into json: %s", key, err.Error())
+			return
+		}
+
+		// lookup value
+		val, ok := jsonMap[field]
+		if !ok {
+			w.WriteHeader(http.StatusBadRequest)
+			log.WWarn(w, "err key '%s' does not have field '%s'", key, field)
+			return
+		}
+
+		// successful field get
+		w.Header().Set("Content-Type", "application/json")
+		maxDepth := GetMaxDepthParam(r)
+		resolvedValue := index.ResolveReferences(val, maxDepth)
+
+		jsonData, _ := json.Marshal(resolvedValue)
+		fmt.Fprintf(w, "%+v", string(jsonData))
+		return
+	}
+
+	// otherwise write 404
+	w.WriteHeader(http.StatusNotFound)
+	log.WWarn(w, "key '%s' not found", key)
+}
+
 // try to find recursive depth param or else return a default
 func GetMaxDepthParam(r *http.Request) int {
 	maxDepth := 3
