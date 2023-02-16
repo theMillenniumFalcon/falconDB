@@ -2,8 +2,11 @@ package main
 
 import (
 	"bufio"
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/theMillenniumFalcon/falconDB/index"
@@ -68,12 +71,54 @@ func indexWrapper() {
 	files := index.I.List()
 	log.Success("found %d files in index:", len(files))
 
-	for _, f := range files {
-		log.Info(f)
+	for _, file := range files {
+		log.Info(file)
 	}
 }
 
 func lookupWrapper(args []string) error {
+	// assert theres a key
+	if len(args) < 2 {
+		err := fmt.Errorf("no key provided")
+		return err
+	}
+
+	key := args[1]
+
+	// lookup key, return err if not found
+	file, ok := index.I.Lookup(key)
+	if !ok {
+		err := fmt.Errorf("key doesn't exist")
+		return err
+	}
+
+	log.Success("found key %s:", key)
+
+	// get file bytes
+	m, err := file.ToMap()
+	if err != nil {
+		return err
+	}
+
+	// resolve refs
+	depth := parseDepthFromArgs(args)
+	log.Info("resolving reference to depth %d...", depth)
+	resolvedMap := index.ResolveReferences(m, depth)
+
+	// back to bytes
+	b, err := json.Marshal(resolvedMap)
+	if err != nil {
+		return err
+	}
+
+	// pretty format
+	var prettyJSON bytes.Buffer
+	err = json.Indent(&prettyJSON, b, "", "\t")
+	if err != nil {
+		return err
+	}
+
+	log.Info("%s", prettyJSON.String())
 	return nil
 }
 
@@ -101,4 +146,17 @@ func deleteWrapper(args []string) error {
 
 	log.Success("deleted key %s", key)
 	return nil
+}
+
+func parseDepthFromArgs(args []string) int {
+	if len(args) < 3 {
+		// no depth argument, use default
+		return DefaultDepth
+	}
+
+	if parsedInt, err := strconv.Atoi(args[2]); err == nil {
+		return parsedInt
+	}
+
+	return DefaultDepth
 }
