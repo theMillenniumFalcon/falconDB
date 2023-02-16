@@ -1,3 +1,4 @@
+// Package index contains files responsible for maintaining the database document index
 package index
 
 import (

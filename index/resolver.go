@@ -7,7 +7,7 @@ import (
 )
 
 // resolves a single string that has a reference in it
-func resolveString(valString string, depthLeft int) interface{} {
+func ResolveString(valString string, depthLeft int) interface{} {
 	key := strings.Replace(valString, "REF::", "", 1)
 	file, ok := I.Lookup(key)
 
@@ -43,7 +43,7 @@ func ResolveReferences(jsonVal interface{}, depthLeft int) interface{} {
 
 		// if value is reference to another key
 		if strings.Contains(valString, "REF::") {
-			resolvedString := resolveString(valString, depthLeft)
+			resolvedString := ResolveString(valString, depthLeft)
 			return resolvedString
 		}
 

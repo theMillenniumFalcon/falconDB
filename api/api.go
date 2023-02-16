@@ -52,7 +52,7 @@ func GetKey(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 
 		// successful field get
 		w.Header().Set("Content-Type", "application/json")
-		maxDepth := getMaxDepthParam(r)
+		maxDepth := GetMaxDepthParam(r)
 		resolvedJsonMap := index.ResolveReferences(jsonMap, maxDepth)
 
 		jsonData, _ := json.Marshal(resolvedJsonMap)
@@ -66,7 +66,7 @@ func GetKey(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 }
 
 // try to find recursive depth param or else return a default
-func getMaxDepthParam(r *http.Request) int {
+func GetMaxDepthParam(r *http.Request) int {
 	maxDepth := 3
 
 	maxDepthStr := r.URL.Query().Get("depth")
@@ -133,6 +133,36 @@ func PatchKeyField(w http.ResponseWriter, r *http.Request, ps httprouter.Params)
 	// otherwise write 404
 	w.WriteHeader(http.StatusNotFound)
 	log.WWarn(w, "key '%s' not found", key)
+}
+
+// UpdateKey creates or updates the file with that key with the request body
+func UpdateKey(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	key := ps.ByName("key")
+	log.Info("put key '%s'", key)
+	file, ok := index.I.Lookup(key)
+
+	// get bytes from request body
+	bodyBytes, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		log.WWarn(w, "err reading body when key '%s': %s", key, err.Error())
+		return
+	}
+
+	// update index
+	err = index.I.Put(file, bodyBytes)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.WWarn(w, "err updating key '%s': %s", key, err.Error())
+		return
+	}
+
+	// file is updated
+	if ok {
+		log.WInfo(w, "update '%s' successful", key)
+		return
+	}
+	log.WInfo(w, "create '%s' successful", key)
 }
 
 // RegenerateIndex rebuilds main index with saved directory
