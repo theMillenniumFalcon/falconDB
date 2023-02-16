@@ -29,6 +29,32 @@ func main() {
 				DefaultText: "db",
 			},
 		},
+		Commands: []*cli.Command{
+			{
+				Name:    "start",
+				Aliases: []string{"st"},
+				Usage:   "start a falcondb server",
+				Flags: []cli.Flag{
+					&cli.IntFlag{
+						Name:        "port",
+						Aliases:     []string{"p"},
+						Value:       4000,
+						Usage:       "port to run falcondb on",
+						DefaultText: "4000",
+					},
+				},
+				Action: func(c *cli.Context) error {
+					return serve(c.Int("port"), c.String("dir"))
+				},
+			}, {
+				Name:    "shell",
+				Aliases: []string{"sh"},
+				Usage:   "start an interactive falcondb shell",
+				Action: func(c *cli.Context) error {
+					return shell(c.String("dir"))
+				},
+			},
+		},
 	}
 
 	err := app.Run(os.Args)
