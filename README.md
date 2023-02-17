@@ -170,14 +170,3 @@ curl localhost:4000/key/example_field?depth=5
 0. `git clone https://github.com/themillenniumfalcon/falconDB.git`
 1. `go install github.com/themillenniumfalcon/falconDB`
 2. `falcondb`
-
-#### via docker
-0. `docker pull nishankpr/falcondb:latest`
-1. `docker run -p 4000:4000 nishankpr/falcondb:latest st` # change -p 4000:4000 to different port if necessary
-
-**Note:** the docker version only supports the REST API server, not the CLI
-
-## building `falconDB` from source
-0. `git clone https://github.com/themillenniumfalcon/falconDB.git`
-1. `make build`
-2. (optional) for cross-platform builds, run `make build-all`
